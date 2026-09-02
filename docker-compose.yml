@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tododb
+      POSTGRES_USER: todouser
+      POSTGRES_PASSWORD: TodoPass123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todouser -d tododb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tododb
+      DB_USER: todouser
+      DB_PASSWORD: TodoPass123!
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    build:
+      context: .
+      dockerfile: caddy/Dockerfile
+    environment:
+      BACKEND_HOST: backend
+      BACKEND_PORT: 8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:

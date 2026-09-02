@@ -1,27 +1,20 @@
 :3000 {
-	encode gzip
+    encode gzip
 
-	header {
-		X-Frame-Options "DENY"
-		X-Content-Type-Options "nosniff"
-		X-XSS-Protection "1; mode=block"
-	}
+    header {
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+    }
 
-	# ===== STUDENT TODO =====
-	# If your Tomcat listens on a port other than 8080 (e.g. 8888), change
-	# "localhost:8080" below to match.
-	# =========================
-	handle /api/* {
-		rewrite * /todo{uri}
-		reverse_proxy localhost:8080
-	}
+    handle /api/* {
+        rewrite * /todo{uri}
+        reverse_proxy {$BACKEND_HOST:localhost}:{$BACKEND_PORT:8080}
+    }
 
-	# Serve the built React app for everything else.
-	# Path is relative to Caddy's working directory — run `caddy run` from
-	# the project root (see README), not from inside caddy/.
-	handle {
-		root * frontend/dist
-		try_files {path} /index.html
-		file_server
-	}
+    handle {
+        root * frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
 }
